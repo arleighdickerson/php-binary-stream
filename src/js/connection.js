@@ -6,6 +6,4 @@ export const ws = new WebSocket('ws://assets.aeaweb.dev:8889', undefined, {
   automaticOpen: false
 })
 
-$(document).ready(() => ws.open(true))
-
 export const client = new BinaryClient(ws)
