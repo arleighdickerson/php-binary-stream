@@ -1,4 +1,6 @@
-<?hh
+<?php
+
+namespace arls\binarystream;
 
 class Client {
     use BinaryHandlers;
