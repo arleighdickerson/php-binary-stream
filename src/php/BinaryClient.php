@@ -4,14 +4,15 @@ namespace arls\binarystream;
 
 class Client {
     use BinaryHandlers;
+	
+	private $_url;
+	
+	public function __construct($url){
+		$this->_url = $url;
+    }
 
     public function run() {
-        Ratchet\Client\connect(
-            "ws://"
-            . Module::getInstance()->serverAddress
-            . ":"
-            . Module::getInstance()->wsPort
-        )->then(function (Ratchet\Client\WebSocket $ws) {
+        Ratchet\Client\connect($this->_url)->then(function (Ratchet\Client\WebSocket $ws) {
             $ws->on('message', function ($msg) {
                 $data = $msg->getPayload();
                 /** @var BinaryNode $node */
