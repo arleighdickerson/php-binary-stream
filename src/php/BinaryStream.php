@@ -6,7 +6,6 @@ namespace arls\binarystream;
 
 use Evenement\EventEmitterTrait;
 use Hoa;
-use MessagePack\Packer;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use React\Stream\WritableStreamInterface;
@@ -103,7 +102,7 @@ class BinaryStream implements DuplexStreamInterface {
         if (!$this->_writable) {
             return false;
         }
-        $message = self::getPacker()->packArray([$code, $data, $this->_streamId]);
+        $message = Codec::encode([$code, $data, $this->_streamId]);
         $this->_client->send(
             $message,
             $this->_node,
@@ -168,18 +167,6 @@ class BinaryStream implements DuplexStreamInterface {
     public function pipe(WritableStreamInterface $dest, array $options = []) {
         Util::pipe($this, $dest, $options);
         return $dest;
-    }
-
-    private static $_packer;
-
-    /**
-     * @return Packer
-     */
-    private static function getPacker() {
-        if (self::$_packer === null) {
-            self::$_packer = new Packer();
-        }
-        return self::$_packer;
     }
 }
 

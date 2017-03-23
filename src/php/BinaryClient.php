@@ -2,9 +2,8 @@
 
 namespace arls\binarystream;
 
-use MessagePack\BufferUnpacker;
-use MessagePack\Unpacker;
 use Ratchet;
+use React;
 
 class Client {
     use BinaryHandlers;
@@ -15,42 +14,24 @@ class Client {
         $this->_url = $url;
     }
 
-    public function run() {
-        Ratchet\Client\connect($this->_url)->then(function (Ratchet\Client\WebSocket $ws) {
-            $ws->on('message', function ($msg) {
-                $data = $msg->getPayload();
-                /** @var BinaryNode $node */
-                $unpacked = $this->unpack($data);
-                list($type, $payload, $bonus) = $unpacked;
-                $this->invokeHandler($type, $payload, $bonus);
+    public function run(React\EventLoop\LoopInterface $loop) {
+        return call_user_func(new Ratchet\Client\Factory($loop), $this->_url)
+            ->then(function (Ratchet\Client\WebSocket $ws) {
+                $ws->on('message', function ($msg) {
+                    $data = $msg->getPayload();
+                    /** @var BinaryNode $node */
+                    $unpacked = Codec::decode($data);
+                    list($type, $payload, $bonus) = $unpacked;
+                    $this->invokeHandler($type, $payload, $bonus);
+                });
+            }, function ($e) {
+                echo "Could not connect: {$e->getMessage()}\n";
             });
-            $this->onOpen($ws);
-        }, function ($e) {
-            echo "Could not connect: {$e->getMessage()}\n";
-        });
-    }
-
-    public function onOpen(Ratchet\Client\WebSocket $ws) {
-        //override THIS one
-        return;
     }
 
     public function getClient() {
     }
 
     public function getNode() {
-    }
-
-    /**
-     * @var Unpacker|null
-     */
-    private static $_unpacker;
-
-    private static function unpack($value) {
-        if (self::$_unpacker === null) {
-            $bufferUnpacker = new BufferUnpacker();
-            self::$_unpacker = new Unpacker($bufferUnpacker);
-        }
-        return self::$_unpacker->unpack($value);
     }
 }

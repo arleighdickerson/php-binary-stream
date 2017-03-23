@@ -8,7 +8,7 @@ use React;
 /**
  * Class WsServer
  *
- * HOA's WebSocket Server implementation driven by a React event loop, the best of both worlds
+ * HOA's WebSocket server implementation driven by a React event loop, the best of both worlds
  */
 class WsServer extends Hoa\Websocket\Server {
     /**
@@ -17,10 +17,6 @@ class WsServer extends Hoa\Websocket\Server {
     private $_loop;
 
     public function __construct(React\EventLoop\LoopInterface $loop, Hoa\Socket\Server $server, Hoa\Http\Request $request = null) {
-        if ($loop === null) {
-            $loop = React\EventLoop\Factory::create();
-        }
-
         $this->_loop = $loop;
         $this->_loop->nextTick(function () {
             $this->open();

@@ -5,8 +5,6 @@ namespace arls\binarystream;
 
 use Evenement\EventEmitterTrait;
 use Hoa;
-use MessagePack\BufferUnpacker;
-use MessagePack\Unpacker;
 
 class BinaryServer {
     use EventEmitterTrait;
@@ -44,7 +42,7 @@ class BinaryServer {
             /** @var BinaryNode $node */
             $node = $bucket->getSource()->getConnection()->getCurrentNode();
             $data = $bucket->getData()['message'];
-            $unpacked = $this->unpack($data);
+            $unpacked = Codec::decode($data);
             list($type, $payload, $bonus) = $unpacked;
             $node->invokeHandler($type, $payload, $bonus);
         });
@@ -61,18 +59,5 @@ class BinaryServer {
 
     public function close($code, $message) {
         $this->_server->close($code, $message);
-    }
-
-    /**
-     * @var Unpacker|null
-     */
-    private static $_unpacker;
-
-    private static function unpack($value) {
-        if (self::$_unpacker === null) {
-            $bufferUnpacker = new BufferUnpacker();
-            self::$_unpacker = new Unpacker($bufferUnpacker);
-        }
-        return self::$_unpacker->unpack($value);
     }
 }
