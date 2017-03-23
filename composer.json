@@ -1,0 +1,14 @@
+{
+    "require": {
+        "hoa/websocket": "^3.0",
+        "rybakit/msgpack": "^0.2.1",
+        "voryx/thruway": "^0.4.2",
+        "react/react": "*",
+        "react/stream": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "arls\\binarystream\\": "src/php"
+        }
+    }
+}

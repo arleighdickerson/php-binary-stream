@@ -13,3 +13,5 @@ nbproject
 # windows thumbnail cache
 Thumbs.db
 
+/vendor
+

@@ -7,9 +7,11 @@ namespace arls\binarystream;
 use Evenement\EventEmitterTrait;
 use Hoa;
 use MessagePack\Packer;
-use Sabre\VObject\Property\Binary;
+use React\Stream\DuplexStreamInterface;
+use React\Stream\Util;
+use React\Stream\WritableStreamInterface;
 
-class BinaryStream {
+class BinaryStream implements DuplexStreamInterface {
     use EventEmitterTrait;
 
     const PAYLOAD_RESERVED = 0;
@@ -44,7 +46,7 @@ class BinaryStream {
         extract($options, EXTR_OVERWRITE);
         $this->_meta = $meta;
         if ($create) {
-            $this->_write(BinaryStream::PAYLOAD_NEW_STREAM, $meta, $streamId);
+            $this->_write(BinaryStream::PAYLOAD_NEW_STREAM, $meta);
         }
     }
 
@@ -97,33 +99,43 @@ class BinaryStream {
         $this->emit('drain');
     }
 
-    protected function _write($code, $data = null, $bonus = null) {
+    protected function _write($code, $data = null) {
         if (!$this->_writable) {
             return false;
         }
-        $message = self::getPacker()->packArray([$code, $data, $bonus]);
-        $this->_client->send($message, $this->_node, Hoa\Websocket\Connection::OPCODE_BINARY_FRAME);
+        $message = self::getPacker()->packArray([$code, $data, $this->_streamId]);
+        $this->_client->send(
+            $message,
+            $this->_node,
+            Hoa\Websocket\Connection::OPCODE_BINARY_FRAME
+        );
         return true;
     }
 
     public function write($data) {
         if ($this->_writable) {
-            $out = $this->_write(self::PAYLOAD_DATA, $data, $this->_streamId);
+            $out = $this->_write(self::PAYLOAD_DATA, $data);
             return !$this->_paused && $out;
         } else {
             $this->emit('error', ['stream is not writeable']);
         }
     }
 
-    public function end() {
+    public function end($data = null) {
+        if (!$this->isWritable()) {
+            return;
+        }
         $this->_ended = true;
         $this->_readable = false;
-        $this->_write(BinaryStream::PAYLOAD_END, null, $this->_streamId);
+        if ($data !== null) {
+            $this->_write(BinaryStream::PAYLOAD_DATA, $data);
+        }
+        $this->_write(BinaryStream::PAYLOAD_END);
     }
 
     public function close() {
         $this->onClose();
-        $this->_write(BinaryStream::PAYLOAD_CLOSE, null, $this->_streamId);
+        $this->_write(BinaryStream::PAYLOAD_CLOSE);
     }
 
     // =======================================================
@@ -145,15 +157,17 @@ class BinaryStream {
 
     public function pause() {
         $this->onPause();
-        $this->_write(BinaryStream::PAYLOAD_PAUSE, null, $this->_streamId);
+        $this->_write(BinaryStream::PAYLOAD_PAUSE);
     }
 
-    public function pipe($dest, $options = []) {
-        return StreamHelpers::pipe($this, $dest, $options);
+    public function resume() {
+        $this->onResume();
+        $this->_write(BinaryStream::PAYLOAD_RESUME);
     }
 
-    public function writeToFile($filename) {
-        return StreamHelpers::writeToFile($this, $filename);
+    public function pipe(WritableStreamInterface $dest, array $options = []) {
+        Util::pipe($this, $dest, $options);
+        return $dest;
     }
 
     private static $_packer;

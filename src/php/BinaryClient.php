@@ -2,6 +2,10 @@
 
 namespace arls\binarystream;
 
+use MessagePack\BufferUnpacker;
+use MessagePack\Unpacker;
+use Ratchet;
+
 class Client {
     use BinaryHandlers;
 
@@ -39,17 +43,6 @@ class Client {
 
     /**
      * @var Unpacker|null
-     */
-    private static $_unpacker;
-
-    private static function unpack($value) {
-        if (self::$_unpacker === null) {
-            $bufferUnpacker = new BufferUnpacker();
-            self::$_unpacker = new Unpacker($bufferUnpacker);
-        }
-        return self::$_unpacker->unpack($value);
-    }
-}
      */
     private static $_unpacker;
 
