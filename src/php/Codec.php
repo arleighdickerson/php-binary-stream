@@ -1,8 +1,6 @@
 <?php
 
 
-namespace arls\binarystream;
-
 
 use MessagePack\Packer;
 use MessagePack\Unpacker;

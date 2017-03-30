@@ -1,18 +1,13 @@
 <?php
 
-namespace arls\binarystream;
-
-use Evenement\EventEmitterTrait;
 
 trait BinaryHandlers {
-    use EventEmitterTrait;
-
     private $_nextId = 1;
     private $_streams = [];
 
-    abstract function getClient();
+    protected abstract function getClient();
 
-    abstract function getNode();
+    public abstract function onStream(BinaryStream $stream, $meta);
 
     /**
      * @param $data
@@ -37,7 +32,7 @@ trait BinaryHandlers {
      * @return BinaryStream
      */
     public function receiveStream($streamId) {
-        return $this->attachStream(new BinaryStream($this->getClient(), $streamId, $this->getNode()));
+        return $this->attachStream(new BinaryStream($this->getClient(), $streamId));
     }
 
     /**
@@ -46,7 +41,9 @@ trait BinaryHandlers {
      */
     public function createStream($meta = []) {
         $create = true;
-        $stream = $this->attachStream(new BinaryStream($this->getClient(), $this->_nextId, $this->getNode(), compact('create', 'meta')));
+        $stream = $this->attachStream(
+            new BinaryStream($this->getClient(), $this->_nextId, compact('create', 'meta'))
+        );
         $this->_nextId += 2;
         return $stream;
     }
@@ -79,7 +76,7 @@ trait BinaryHandlers {
             },
             BinaryStream::PAYLOAD_NEW_STREAM => function ($self, $meta, $streamId) {
                 $stream = $self->receiveStream($streamId);
-                $self->emit('stream', compact('stream', 'meta'));
+                $self->onStream($stream, $meta);
             },
             BinaryStream::PAYLOAD_DATA => function ($self, $payload, $streamId) {
                 $stream = $self->_streams[$streamId];//@TODO: handle exception if not found

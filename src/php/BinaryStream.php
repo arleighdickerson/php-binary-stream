@@ -1,11 +1,8 @@
 <?php
 
 
-namespace arls\binarystream;
-
 
 use Evenement\EventEmitterTrait;
-use Hoa;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use React\Stream\WritableStreamInterface;
@@ -30,12 +27,10 @@ class BinaryStream implements DuplexStreamInterface {
 
     private $_streamId;
 
-    private $_node;
     private $_client;
     private $_meta;
 
-    public function __construct($client, $streamId, $node = null, $options = []) {
-        $this->_node = $node;
+    public function __construct($client, $streamId, $options = []) {
         $this->_streamId = $streamId;
         $this->_client = $client;
 
@@ -103,11 +98,7 @@ class BinaryStream implements DuplexStreamInterface {
             return false;
         }
         $message = Codec::encode([$code, $data, $this->_streamId]);
-        $this->_client->send(
-            $message,
-            $this->_node,
-            Hoa\Websocket\Connection::OPCODE_BINARY_FRAME
-        );
+        $this->_client->sendBinary($message);
         return true;
     }
 
@@ -116,7 +107,7 @@ class BinaryStream implements DuplexStreamInterface {
             $out = $this->_write(self::PAYLOAD_DATA, $data);
             return !$this->_paused && $out;
         } else {
-            $this->emit('error', ['stream is not writeable']);
+            $this->emit('error', ['stream is not writable']);
         }
     }
 
