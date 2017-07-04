@@ -1,7 +1,11 @@
 <?php
 
+
+namespace arleigh\binstream;
+
+use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 
 interface StreamComponentInterface extends MessageComponentInterface {
-    function onStream(BinaryStream $stream, $meta);
+    function onStream(ConnectionInterface $connection, BinaryStream $stream, array $meta);
 }

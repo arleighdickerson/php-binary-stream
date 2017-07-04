@@ -1,14 +1,15 @@
 {
-    "require": {
-        "hoa/websocket": "^3.0",
-        "rybakit/msgpack": "^0.2.1",
-        "voryx/thruway": "^0.4.2",
-        "react/react": "*",
-        "react/stream": "*"
-    },
-    "autoload": {
-        "psr-4": {
-            "arls\\binarystream\\": "src/php"
-        }
+  "name": "arleigh/websocket-stream",
+  "minimum-stability": "stable",
+  "require": {
+    "rybakit/msgpack": "^0.2.1",
+    "cboden/ratchet": "^0.3.6",
+    "react/stream": "@dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "arleigh\\wsstream\\": "src/php",
+      "Ratchet\\WebSocket\\Version\\": "src/monkeypatch"
     }
+  }
 }

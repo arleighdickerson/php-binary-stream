@@ -1,6 +1,8 @@
 <?php
 
 
+namespace arleigh\binstream;
+
 
 use MessagePack\Packer;
 use MessagePack\Unpacker;
@@ -10,9 +12,9 @@ final class Codec {
     }
 
     /**
-     * @var Unpacker
+     * @var Packer
      */
-    private static $_unpacker;
+    private static $_packer;
 
     public static function encode(array $value) {
         if (self::$_packer === null) {
@@ -22,9 +24,9 @@ final class Codec {
     }
 
     /**
-     * @var Packer
+     * @var Unpacker
      */
-    private static $_packer;
+    private static $_unpacker;
 
     public static function decode($value) {
         if (self::$_unpacker === null) {

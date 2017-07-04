@@ -1,8 +1,11 @@
 <?php
 
 
+namespace arleigh\binstream;
+
 
 use Evenement\EventEmitterTrait;
+use Ratchet\ConnectionInterface;
 use React\Stream\DuplexStreamInterface;
 use React\Stream\Util;
 use React\Stream\WritableStreamInterface;
@@ -30,15 +33,15 @@ class BinaryStream implements DuplexStreamInterface {
     private $_client;
     private $_meta;
 
-    public function __construct($client, $streamId, $options = []) {
-        $this->_streamId = $streamId;
-        $this->_client = $client;
-
-        /** @var $create */
-        $meta = [];
+    public function __construct(ConnectionInterface $client, $streamId, $options = []) {
+        $meta = null;
         $create = false;
         extract($options, EXTR_OVERWRITE);
-        $this->_meta = $meta;
+
+        $this->_streamId = $streamId;
+        $this->_client = $client;
+        $this->_meta = $meta ?: [];
+
         if ($create) {
             $this->_write(BinaryStream::PAYLOAD_NEW_STREAM, $meta);
         }
@@ -115,17 +118,22 @@ class BinaryStream implements DuplexStreamInterface {
         if (!$this->isWritable()) {
             return;
         }
-        $this->_ended = true;
-        $this->_readable = false;
-        if ($data !== null) {
-            $this->_write(BinaryStream::PAYLOAD_DATA, $data);
+        $ended = $this->_ended;
+        $this->onEnd();
+        if (!$ended) {
+            if ($data !== null) {
+                $this->_write(BinaryStream::PAYLOAD_DATA, $data);
+            }
+            $this->_write(BinaryStream::PAYLOAD_END);
         }
-        $this->_write(BinaryStream::PAYLOAD_END);
     }
 
     public function close() {
+        $closed = $this->_closed;
         $this->onClose();
-        $this->_write(BinaryStream::PAYLOAD_CLOSE);
+        if (!$closed) {
+            $this->_write(BinaryStream::PAYLOAD_CLOSE);
+        }
     }
 
     // =======================================================
@@ -155,9 +163,15 @@ class BinaryStream implements DuplexStreamInterface {
         $this->_write(BinaryStream::PAYLOAD_RESUME);
     }
 
+    /**
+     * @return ConnectionInterface
+     */
+    public function getClient() {
+        return $this->_client;
+    }
+
     public function pipe(WritableStreamInterface $dest, array $options = []) {
         Util::pipe($this, $dest, $options);
         return $dest;
     }
 }
-

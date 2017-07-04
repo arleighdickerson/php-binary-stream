@@ -1,58 +1,54 @@
 <?php
 
 
+namespace arleigh\binstream;
+
+use Ratchet\ConnectionInterface;
+
 trait BinaryHandlers {
     private $_nextId = 1;
     private $_streams = [];
 
-    protected abstract function getClient();
+    public abstract function onStream(
+        ConnectionInterface $conn,
+        BinaryStream $stream,
+        array $meta
+    );
 
-    public abstract function onStream(BinaryStream $stream, $meta);
+    public abstract function onError(ConnectionInterface $conn, \Exception $e);
 
-    /**
-     * @param $data
-     * @param array $meta
-     * @return BinaryStream
-     */
-    public function send($data, $meta = []) {
-        $stream = $this->createStream($meta);
-        $stream->write($data);
-        return $stream;
+    public function onBinaryMessage(ConnectionInterface $from, $msg) {
+        list($type, $payload, $bonus) = Codec::decode($msg);
+        $this->invokeHandler($from, $type, $payload, $bonus);
     }
 
     /**
-     * @return BinaryStream[]
-     */
-    public function getStreams() {
-        return $this->_streams;
-    }
-
-    /**
-     * @param $streamId
-     * @return BinaryStream
-     */
-    public function receiveStream($streamId) {
-        return $this->attachStream(new BinaryStream($this->getClient(), $streamId));
-    }
-
-    /**
+     * @param ConnectionInterface $conn
      * @param $meta
      * @return BinaryStream
      */
-    public function createStream($meta = []) {
+    function createStream(ConnectionInterface $conn, array $meta) {
         $create = true;
         $stream = $this->attachStream(
-            new BinaryStream($this->getClient(), $this->_nextId, compact('create', 'meta'))
+            new BinaryStream($conn, $this->nextId(), compact('create', 'meta'))
         );
-        $this->_nextId += 2;
         return $stream;
+    }
+
+    /**
+     * @param ConnectionInterface $conn
+     * @param int $streamId
+     * @return BinaryStream
+     */
+    public function receiveStream(ConnectionInterface $conn, $streamId) {
+        return $this->attachStream(new BinaryStream($conn, $streamId));
     }
 
     /**
      * @param BinaryStream $stream
      * @return BinaryStream
      */
-    protected function attachStream(BinaryStream $stream) {
+    public function attachStream(BinaryStream $stream) {
         $stream->on('close', function () use ($stream) {
             unset($this->_streams[$stream->getId()]);
         });
@@ -60,44 +56,58 @@ trait BinaryHandlers {
         return $stream;
     }
 
-    private static $_handlers;
 
-    public function invokeHandler($type, $payload, $bonus) {
-        if (self::$_handlers === null) {
-            self::$_handlers = self::createHandlers();
-        }
-        call_user_func(self::$_handlers[$type], $this, $payload, $bonus);
+    protected function nextId() {
+        $id = $this->_nextId;
+        $this->_nextId = $id + 2;
+        return $id;
     }
 
-    protected static function createHandlers() {
-        return [
-            BinaryStream::PAYLOAD_RESERVED => function ($self, $payload, $bonus) {
+    protected function invokeHandler(ConnectionInterface $conn, $type, $payload, $streamId) {
+        /** @var BinaryStream|null $stream */
+        $stream = isset($this->_streams[$streamId]) ? $this->_streams[$streamId] : null;
+        switch ($type) {
+            case BinaryStream::PAYLOAD_RESERVED:
                 return;
-            },
-            BinaryStream::PAYLOAD_NEW_STREAM => function ($self, $meta, $streamId) {
-                $stream = $self->receiveStream($streamId);
-                $self->onStream($stream, $meta);
-            },
-            BinaryStream::PAYLOAD_DATA => function ($self, $payload, $streamId) {
-                $stream = $self->_streams[$streamId];//@TODO: handle exception if not found
-                $stream->onData($payload);
-            },
-            BinaryStream::PAYLOAD_PAUSE => function ($self, $payload, $streamId) {
-                $stream = $self->_streams[$streamId];//@TODO: handle exception if not found
-                $stream->onPause();
-            },
-            BinaryStream::PAYLOAD_RESUME => function ($self, $payload, $streamId) {
-                $stream = $self->_streams[$streamId];//@TODO: handle exception if not found
-                $stream->onResume();
-            },
-            BinaryStream::PAYLOAD_END => function ($self, $payload, $streamId) {
-                $stream = $self->_streams[$streamId];//@TODO: handle exception if not found
-                $stream->onEnd();
-            },
-            BinaryStream::PAYLOAD_CLOSE => function ($self, $payload, $streamId) {
-                $stream = $self->_streams[$streamId];//@TODO: handle exception if not found
-                $stream->onClose();
-            },
-        ];
+            case BinaryStream::PAYLOAD_NEW_STREAM:
+                $stream = $this->receiveStream($conn, $streamId);
+                $this->onStream($conn, $stream, $payload);
+                return;
+            case BinaryStream::PAYLOAD_DATA:
+                $stream
+                    ? $stream->onData($payload)
+                    : $this->streamNotFound($conn, $streamId, 'data');
+                return;
+            case BinaryStream::PAYLOAD_PAUSE:
+                $stream
+                    ? $stream->onPause()
+                    : $this->streamNotFound($conn, $streamId, 'pause');
+                return;
+            case BinaryStream::PAYLOAD_RESUME:
+                $stream
+                    ? $stream->onResume()
+                    : $this->streamNotFound($conn, $streamId, 'resume');
+                return;
+            case BinaryStream::PAYLOAD_END:
+                $stream
+                    ? $stream->onEnd()
+                    : $this->streamNotFound($conn, $streamId, 'end');
+                return;
+            case BinaryStream::PAYLOAD_CLOSE:
+                $stream
+                    ? $stream->onClose()
+                    : $this->streamNotFound($conn, $streamId, 'close');
+                return;
+            default:
+                $this->raiseError($conn, "Unrecognized message type received: $type");
+        }
+    }
+
+    private function raiseError(ConnectionInterface $conn, $msg) {
+        $this->onError($conn, new \Exception($msg));
+    }
+
+    private function streamNotFound(ConnectionInterface $conn, $streamId, $payloadType) {
+        $this->raiseError($conn, "Received `$payloadType` message for unknown stream with id `$streamId`");
     }
 }
