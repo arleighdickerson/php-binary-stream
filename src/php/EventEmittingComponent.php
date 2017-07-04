@@ -1,7 +1,7 @@
 <?php
 
 
-namespace arleigh\binstream;
+namespace arleigh\wsstream;
 
 
 use common\helpers\ReflectionTrait;

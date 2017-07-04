@@ -1,5 +1,5 @@
 {
-  "name": "arleigh/websocket-stream",
+  "name": "arleigh/wsstream",
   "minimum-stability": "stable",
   "require": {
     "rybakit/msgpack": "^0.2.1",
