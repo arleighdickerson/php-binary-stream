@@ -1,6 +1,6 @@
 <?php
 
-namespace arleigh\wsstream;
+namespace Arleigh\Ratchet\Stream;
 
 use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;

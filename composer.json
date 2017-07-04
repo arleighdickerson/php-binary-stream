@@ -8,7 +8,7 @@
   },
   "autoload": {
     "psr-4": {
-      "arleigh\\wsstream\\": "src/php",
+      "Arleigh\\Ratchet\\Stream\\": "src/php",
       "Ratchet\\WebSocket\\Version\\": "src/monkeypatch"
     }
   }

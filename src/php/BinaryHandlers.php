@@ -1,7 +1,7 @@
 <?php
 
 
-namespace arleigh\wsstream;
+namespace Arleigh\Ratchet\Stream;
 
 use Ratchet\ConnectionInterface;
 
@@ -9,14 +9,29 @@ trait BinaryHandlers {
     private $_nextId = 1;
     private $_streams = [];
 
+    /**
+     * @param ConnectionInterface $conn
+     * @param BinaryStream $stream
+     * @param array $meta
+     * @return void
+     */
     public abstract function onStream(
         ConnectionInterface $conn,
         BinaryStream $stream,
         array $meta
     );
 
+    /**
+     * @param ConnectionInterface $conn
+     * @param \Exception $e
+     * @return void
+     */
     public abstract function onError(ConnectionInterface $conn, \Exception $e);
 
+    /**
+     * @param ConnectionInterface $from
+     * @param string $msg (binary)
+     */
     public function onBinaryMessage(ConnectionInterface $from, $msg) {
         list($type, $payload, $bonus) = Codec::decode($msg);
         $this->invokeHandler($from, $type, $payload, $bonus);
@@ -56,13 +71,21 @@ trait BinaryHandlers {
         return $stream;
     }
 
-
+    /**
+     * @return int
+     */
     protected function nextId() {
         $id = $this->_nextId;
         $this->_nextId = $id + 2;
         return $id;
     }
 
+    /**
+     * @param ConnectionInterface $conn
+     * @param $type
+     * @param $payload
+     * @param $streamId
+     */
     protected function invokeHandler(ConnectionInterface $conn, $type, $payload, $streamId) {
         /** @var BinaryStream|null $stream */
         $stream = isset($this->_streams[$streamId]) ? $this->_streams[$streamId] : null;

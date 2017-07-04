@@ -1,7 +1,7 @@
 <?php
 
 
-namespace arleigh\wsstream;
+namespace Arleigh\Ratchet\Stream;
 
 
 use MessagePack\Packer;
