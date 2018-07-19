@@ -1,5 +1,5 @@
 {
-  "name": "arleigh/wsstream",
+  "name": "ratchet-stream",
   "minimum-stability": "stable",
   "require": {
     "rybakit/msgpack": "^0.2.1",
@@ -8,8 +8,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Arleigh\\Ratchet\\Stream\\": "src/php",
-      "Ratchet\\WebSocket\\Version\\": "src/monkeypatch"
+      "Arleigh\\Ratchet\\Stream\\": "php",
+      "Ratchet\\WebSocket\\Version\\": "php/monkeypatch"
     }
   }
 }

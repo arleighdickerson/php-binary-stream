@@ -1,4 +1,4 @@
-const {encode, decode} = require('msgpack-lite')
+import {encode, decode} from 'msgpack-lite'
 
 export const pack = encode
 export const unpack = data => decode(new Uint8Array(data))

@@ -15,8 +15,7 @@ Thumbs.db
 
 /vendor
 /node_modules
-/composer.lock
+/js/dist
 
-/lib
-dist.js
+composer.lock
 

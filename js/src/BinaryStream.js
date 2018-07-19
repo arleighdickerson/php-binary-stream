@@ -7,9 +7,9 @@ import {
   PAYLOAD_NEW_STREAM,
   PAYLOAD_PAUSE,
   PAYLOAD_RESUME
-} from "./Client";
+} from "./BinaryClient";
 
-export default class WsStream extends Stream {
+export class BinaryStream extends Stream {
   constructor(socket, id, create, meta) {
     super()
     this.id = id

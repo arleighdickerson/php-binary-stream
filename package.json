@@ -5,29 +5,17 @@
     "url": "git+https://github.com/arleighdickerson/ratchet-stream.git"
   },
   "author": "Arleigh Dickerson <arls@arleighdickerson.us> (https://www.arleigh.io)",
-  "main": "src/js/WsClient.js",
   "scripts": {
-    "clean": "rm -f dist.js && rm -rf lib",
-    "compile": "babel --plugins transform-es2015-modules-umd --out-file=dist.js src/js && babel src/js --out-dir=lib",
+    "clean": "rm -rf js/dist",
+    "compile": "mkdir -p js/dist && webpack && NODE_ENV=production webpack",
     "prepublish": "npm run compile"
-  },
-  "peerDependencies": {
-    "babel-polyfill": "^6.23.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
-    "babel-plugin-transform-es2015-modules-amd": "^6.24.1",
-    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+    "babel-loader": "^7.1.1",
     "babel-preset-es2015": "^6.24.1",
-    "babel-preset-stage-0": "^6.24.1",
-    "events": "^1.1.1",
     "msgpack-lite": "^0.1.26",
-    "stream": "0.0.2"
-  },
-  "babel": {
-    "presets": [
-      "es2015",
-      "stage-0"
-    ]
+    "stream": "0.0.2",
+    "webpack": "^3.0.0"
   }
 }

@@ -1,5 +1,5 @@
-const {EventEmitter} = require('events')
-import Stream from './WsStream'
+import {EventEmitter} from 'events'
+import {BinaryStream as Stream} from './BinaryStream'
 import * as util from './util'
 
 export const PAYLOAD_RESERVED = 0;
@@ -10,7 +10,7 @@ export const PAYLOAD_RESUME = 4;
 export const PAYLOAD_END = 5;
 export const PAYLOAD_CLOSE = 6;
 
-export default class WsClient extends EventEmitter {
+export class BinaryClient extends EventEmitter{
   constructor(socket) {
     super()
 
